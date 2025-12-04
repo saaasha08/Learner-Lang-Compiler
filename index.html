@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learner Language Compiler</title>
+    <style>
+        /* CSS rules are unchanged */
+        body { margin:0; font-family:"Segoe UI", sans-serif; background:#0e0e0e; color:white; }
+        header { padding:20px; text-align:center; position:relative; }
+        #logo { font-size:36px; font-weight:bold; background: linear-gradient(45deg,#ff6a00,#6a00ff,#00ffff); -webkit-background-clip:text; color:transparent; }
+        #logo span { background: linear-gradient(45deg,#ff00ff,#ffff00); -webkit-background-clip:text; color:transparent; }
+        .manual { text-align:center; margin-top:10px; font-size:18px; opacity:0.8; }
+        .keyword-grid { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; padding: 30px; box-sizing: border-box; }
+        .keyword-box { background: #0b001a; border: 2px solid #4b0082; border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 0 10px #240046; }
+        .keyword-box h3 { color: #ffcc00; font-size: 22px; margin-bottom: 5px; }
+        .keyword-box span { color: cyan; font-size: 26px; }
+        .keyword-box p { color: #00ff99; font-size: 22px; margin-top: 5px; }
+        @media (max-width: 480px) {
+            .keyword-box { padding: 20px; }
+            .keyword-box h3 { font-size: 18px; }
+            .keyword-box p { font-size: 18px; }
+        }
+        .tab-container { display:flex; gap:10px; justify-content:center; padding:10px; }
+        .tab-button { padding:10px 20px; background:#1a1a1a; border:1px solid #6a00ff; color:white; cursor:pointer; border-radius:5px; font-weight:bold; }
+        .tab-button:hover { background:#6a00ff; color:#000; }
+        .container { display:flex; padding:20px; gap:20px; }
+        .editor-section,.output-section { flex:1; background:#1a1a1a; padding:20px; border-radius:10px; box-shadow:0 0 15px #3f0080; }
+        textarea { width:100%; height:300px; background:#000; color:#0f0; font-size:16px; border-radius:5px; padding:10px; }
+        button { margin-top:15px; padding:12px 25px; background:#6a00ff; border:none; color:white; font-size:18px; font-weight:bold; border-radius:5px; cursor:pointer; box-shadow:0 0 10px #6a00ff; }
+        button:hover { background:#5200cc; }
+        .token-container { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; }
+        .token-box { padding:8px 12px; border-radius:8px; display:flex; flex-direction:column; min-width:80px; text-align:center; font-weight:bold; box-shadow:0 0 5px #6a00ff; color:black; }
+        .token-box span { font-size:12px; margin-top:3px; color:#333; }
+        .token-keyword { background:#ff4d4d; }
+        .token-operator { background:#4dff4d; }
+        .token-number { background:#ff4dff; }
+        .token-string { background:#ffff4d; }
+        .token-variable { background:#4dffff; }
+        pre { background:#000; color:#0f0; height:180px; padding:10px; border-radius:5px; overflow-y:auto; font-size:16px; font-weight:bold; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+           <a href="tutorial.html" style="position:absolute; right:20px; top:20px; background:#6a00ff; padding:10px 20px; border-radius:6px; color:white; font-weight:bold; text-decoration:none; box-shadow:0 0 10px #6a00ff;">Learn</a>
+    </div>
+    <h1 id="logo">Learner <span>Lang</span></h1>
+    <div class="manual">A lightweight educational language to learn coding basics easily</div>
+</header>
+
+<div class="tab-container">
+    <button class="tab-button" onclick="showDemo(1)">Print</button>
+    <button class="tab-button" onclick="showDemo(2)">Variable</button>
+    <button class="tab-button" onclick="showDemo(3)">Operators</button>
+    <button class="tab-button" onclick="showDemo(4)">Conditional</button>
+    <button class="tab-button" onclick="showDemo(5)">Loops</button>
+    <button class="tab-button" onclick="showDemo(6)">Arrays</button>
+</div>
+
+<div class="container">
+    <div class="editor-section">
+        <h2>Demo Code</h2>
+        <textarea id="code"></textarea>
+        <button onclick="runLearner()">Run Code</button>
+    </div>
+    <div class="output-section">
+        <h2>Token Stream</h2>
+        <div id="tokenTable" class="token-container"></div>
+        <h2>Terminal Output</h2>
+        <pre id="output"></pre>
+    </div>
+</div>
+
+<div class="learn">
+<div class="keyword-grid">
+    <div class="keyword-box"><h3>#include <stdio.h></h3><span>→</span><p>learner</p></div>
+    <div class="keyword-box"><h3>print</h3><span>→</span><p>result</p></div>
+    <div class="keyword-box"><h3>return</h3><span>→</span><p>done</p></div>
+    <div class="keyword-box"><h3>if</h3><span>→</span><p>happened</p></div>
+    <div class="keyword-box"><h3>else</h3><span>→</span><p>nothappened</p></div>
+    <div class="keyword-box"><h3>let</h3><span>→</span><p>make</p></div>
+    <div class="keyword-box"><h3>while</h3><span>→</span><p>loop</p></div>
+    <div class="keyword-box"><h3>for</h3><span>→</span><p>repeat</p></div>
+    <div class="keyword-box"><h3>AND/OR</h3><span>→</span><p>and/or</p></div> </div>
+</div>
+
+<script>
+const demoCodes = {
+1:`learner
+int main() {
+    result "Welcome to Learner Language!"
+    done 0;
+}`,
+2:`learner
+int main() {
+    make x = 10
+    make y = 20
+    result "x = " + x
+    result "y = " + y
+    result x + y
+    done 0;
+}`,
+3:`learner
+int main() {
+    make a = 5
+    make b = 3
+    result a + b
+    result a - b
+    result a * b
+    result a / b
+    result a % b
+    result a > b
+    result a < b
+    result a == b
+    result a != b
+    done 0;
+}`,
+4:`learner
+int main() {
+    make age = 18
+    make knows_code = true
+    happened age >= 18 and knows_code == true
+        result "Adult Coder"
+    nothappened
+        result "Minor or Non-coder"
+    done 0;
+}`,
+5:`learner
+int main() {
+    result "For Loop"
+    repeat i=1 to 3
+        result i
+
+    result "While Loop"
+    make x = 1
+    loop x <= 3
+        result x
+        make x = x + 1
+
+    result "Nested Repeat"
+    repeat j=1 to 2
+        repeat k=1 to 2
+            result "Outer: " + j + " Inner: " + k
+    
+    done 0;
+}`,
+6:`learner
+int main() {
+    make arr = [1,2,3]
+    result arr[0]
+    arr.push(4)
+    result arr
+    make arr[0] = 5 // Array assignment fix demo
+    result arr
+    done 0;
+}`
+};
+
+function showDemo(tab){ document.getElementById("code").value = demoCodes[tab]; runLearner(); }
+
+function runLearner(){
+    const code=document.getElementById("code").value;
+    const outputBox=document.getElementById("output");
+    const tokenContainer=document.getElementById("tokenTable");
+    outputBox.innerHTML="";
+    tokenContainer.innerHTML="";
+    try{
+        const tokens=lexer(code);
+        renderTokens(tokens);
+        const result=interpretLearner(code);
+        outputBox.innerHTML=result;
+    }catch(err){ outputBox.innerHTML="Error: "+err.message; }
+}
+
+function lexer(code){
+    const lines=code.split("\n");
+    let tokens=[];
+    lines.forEach((line,idx)=>{
+        line=line.trim();
+        if(line===""||line.startsWith("//")) return;
+        // Added 'and', 'or', 'not' to the regex for tokenization
+        const parts=line.match(/"[^"]*"|==|!=|>=|<=|and|or|not|[\w]+|[+\-*\/=%<>]|\S/g) || [];
+        parts.forEach(p=>tokens.push({line:idx+1,value:p}));
+    });
+    return tokens;
+}
+
+function renderTokens(tokens){
+    const container=document.getElementById("tokenTable");
+    tokens.forEach(t=>{
+        const box=document.createElement("div");
+        box.className="token-box";
+        let type="", colorClass="";
+        // Added 'and', 'or', 'not' to keywords
+        const keywords=["learner","result","done","happened","nothappened","make","loop","repeat","int","main", "and", "or", "not"];
+        const operators=["+","-","*","/","%","=","==","!=","<",">",">=","<=","(",")","{","}",";"];
+        if(keywords.includes(t.value)){ type="KEYWORD"; colorClass="token-keyword"; }
+        else if(operators.includes(t.value)){ type="SYMBOL"; colorClass="token-operator"; }
+        else if(/^".*"$/.test(t.value)){ type="STRING"; colorClass="token-string"; }
+        else if(/^\d+$/.test(t.value)){ type="NUMBER"; colorClass="token-number"; }
+        else { type="ID"; colorClass="token-variable"; }
+        box.classList.add(colorClass);
+        box.innerHTML = `<div>${t.value}</div><span>${type} | Line ${t.line}</span>`;
+        container.appendChild(box);
+    });
+}
+
+function interpretLearner(code){
+    const lines = code.split("\n");
+    let output = "";
+    let vars = {};
+
+    function getValue(exp) {
+        // Step 1: Replace Learner logical operators with JavaScript equivalents
+        exp = exp.replace(/\band\b/g, '&&').replace(/\bor\b/g, '||').replace(/\bnot\b/g, '!');
+
+        // Step 2: Replace variables with their values
+        Object.keys(vars).forEach(k => {
+            let val = vars[k];
+            if (Array.isArray(val)) {
+                // For array variable reference
+                exp = exp.replace(new RegExp(`\\b${k}\\b\\[(\\d+)\\]`, "g"), (match, index) => {
+                    return val[parseInt(index)] !== undefined ? JSON.stringify(val[parseInt(index)]) : match;
+                });
+                // For array name itself (for printing)
+                exp = exp.replace(new RegExp(`\\b${k}\\b`, "g"), () => JSON.stringify(val));
+            } else if (typeof val === 'string') {
+                // Ensure strings in expressions are quoted for JS evaluation
+                exp = exp.replace(new RegExp(`\\b${k}\\b`, "g"), `'${val}'`);
+            } else {
+                // For simple variables (numbers, booleans)
+                exp = exp.replace(new RegExp(`\\b${k}\\b`, "g"), val);
+            }
+        });
+
+        // Step 3: Tries to evaluate the expression
+        try {
+            // Check for string concatenation
+            if (exp.includes('"') || exp.includes("'")) {
+                // Simplified string concatenation logic for basic Learner language structure
+                let parts = exp.match(/("[^"]*"|'[^']*'|[^"]*)/g).filter(Boolean);
+                let result = "";
+                for (let part of parts) {
+                    part = part.trim();
+                    if (part.startsWith('"') || part.startsWith("'")) {
+                        result += part.slice(1, -1);
+                    } else if (part === "+") {
+                        continue; // skip the plus
+                    } else if (part !== "") {
+                        // Attempt to evaluate remaining part for math or simple value
+                        try {
+                            // Safely evaluate simple non-string expressions (like x + y)
+                            let evaluation = Function("return " + part)();
+                            // If evaluation is boolean, convert to 'true'/'false' string for concatenation
+                            if (typeof evaluation === 'boolean') {
+                                result += evaluation.toString();
+                            } else {
+                                result += evaluation;
+                            }
+                        } catch {
+                            result += part;
+                        }
+                    }
+                }
+                return result;
+            } else {
+                 // Final evaluation for math/conditionals/booleans
+                 return Function("return " + exp)();
+            }
+        } catch(error) {
+            // console.error("Evaluation Error:", error);
+            return exp; // Return original if not evaluable
+        }
+    }
+
+    function getBlock(startIndex) {
+        let block = [];
+        let i = startIndex + 1;
+        while (i < lines.length && lines[i].startsWith("    ")) {
+            let trimmedLine = lines[i].trim();
+            if (trimmedLine !== "" && !trimmedLine.startsWith("//")) {
+                block.push({ line: trimmedLine, index: i });
+            }
+            i++;
+        }
+        return { block, endIndex: i - 1 };
+    }
+
+    function runBlock(block) {
+        for (const item of block) {
+            runLine(item.line);
+        }
+    }
+
+    function runLine(line) {
+        if (line.startsWith("result ")) {
+            output += getValue(line.substring(7).replace(/;$/, '').trim()) + "\n";
+        } else if (line.startsWith("make ")) {
+            const assignment = line.substring(5).replace(/;$/, '').trim();
+            const equalsIndex = assignment.indexOf("=");
+            const name = assignment.substring(0, equalsIndex).trim();
+            const val = assignment.substring(equalsIndex + 1).trim();
+            
+            // Check if value is an array definition
+            if (val.startsWith("[") && val.endsWith("]")) {
+                 try {
+                     vars[name] = JSON.parse(val);
+                 } catch {
+                      vars[name] = getValue(val);
+                 }
+            } else {
+                 vars[name] = getValue(val);
+            }
+        } else if (line.includes(".push(")) {
+            const pushMatch = line.match(/(.+?)\.push\((.+?)\)/);
+            if (pushMatch) {
+                const arrName = pushMatch[1].trim();
+                const val = pushMatch[2].trim();
+                if (vars[arrName] && Array.isArray(vars[arrName])) {
+                    vars[arrName].push(getValue(val));
+                }
+            }
+        } else if (line.includes("=")) { // For things like x = x + 1 or array element assignment
+            const assignment = line.replace(/;$/, '').trim();
+            const equalsIndex = assignment.indexOf("=");
+            const lhs = assignment.substring(0, equalsIndex).trim();
+            const val = assignment.substring(equalsIndex + 1).trim();
+
+            // Array element assignment: arr[0] = 5
+            const arrayMatch = lhs.match(/(.+?)\[(\d+)\]/);
+            if (arrayMatch) {
+                const arrName = arrayMatch[1].trim();
+                const index = parseInt(arrayMatch[2]);
+                if (vars[arrName] && Array.isArray(vars[arrName])) {
+                    vars[arrName][index] = getValue(val);
+                }
+            } else {
+                // Simple assignment: x = x + 1
+                vars[lhs] = getValue(val);
+            }
+        }
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (line === "" || line.startsWith("//") || line === "learner" || line.startsWith("int main()") || line === "{" || line === "}") continue;
+
+        // Conditionals (happened/nothappened)
+        if (line.startsWith("happened ")) {
+            const cond = line.substring(9).replace(/;$/, '').trim();
+            const { block, endIndex } = getBlock(i);
+            const elseBlockStart = endIndex + 1;
+            
+            let elseIndex = elseBlockStart;
+            while(elseIndex < lines.length && !lines[elseIndex].trim().startsWith("nothappened")) elseIndex++;
+
+            // Evaluate condition using getValue
+            if (getValue(cond) === true) { 
+                runBlock(block);
+                if (elseIndex < lines.length) {
+                    const { block: elseBlock, endIndex: elseEndIndex } = getBlock(elseIndex);
+                    i = elseEndIndex;
+                } else {
+                    i = endIndex;
+                }
+            } else {
+                if (elseIndex < lines.length) {
+                    i = elseIndex; 
+                } else {
+                    i = endIndex; 
+                }
+            }
+            continue;
+        }
+
+        // nothappened block
+        if (line.startsWith("nothappened")) {
+            const { block, endIndex } = getBlock(i);
+            runBlock(block);
+            i = endIndex;
+            continue;
+        }
+
+        // repeat (for)
+        if (line.startsWith("repeat ")) {
+            const repeatLine = line.substring(7).trim();
+            const [varName, range] = repeatLine.split("=");
+            const [startStr, endStr] = range.split("to").map(v => v.replace(/;$/, '').trim());
+            
+            const start = parseInt(getValue(startStr));
+            const end = parseInt(getValue(endStr));
+            const name = varName.trim();
+            
+            const { block, endIndex } = getBlock(i);
+            
+            for (let v = start; v <= end; v++) {
+                vars[name] = v;
+                runBlock(block);
+            }
+            i = endIndex; 
+            continue;
+        }
+
+        // loop (while)
+        if (line.startsWith("loop ")) {
+            const cond = line.substring(5).replace(/;$/, '').trim();
+            const { block, endIndex } = getBlock(i);
+            
+            let loopCount = 0;
+            const maxIterations = 1000; 
+            
+            while (getValue(cond) === true) { 
+                if (loopCount++ > maxIterations) {
+                    output += "\nError: Potential infinite loop detected. Exiting loop.\n";
+                    break;
+                }
+                runBlock(block);
+                if (getValue(cond) !== true) break;
+            }
+            i = endIndex; 
+            continue;
+        }
+        
+        // Final line execution (for result, make, and simple assignments like x=x+1)
+        runLine(line);
+    }
+
+    return output;
+}
+</script>
+
+</body>
+</html>
